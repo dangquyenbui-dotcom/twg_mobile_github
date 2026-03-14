@@ -34,16 +34,16 @@ cp .env.example .env
 
 ```bash
 # Development
-flask --app twg_mobile.app:create_app run --debug
+flask --app app:create_app run --debug
 
 # Production (example with gunicorn)
-gunicorn "twg_mobile.app:create_app()" --bind 0.0.0.0:8000
+gunicorn "app:create_app()" --bind 0.0.0.0:8000
 ```
 
 ## Project Structure
 
 ```
-twg_mobile/
+twg_mobile_github/
   app.py              # Flask app factory
   config.py           # Environment-based configuration
   db.py               # pyodbc connection helper (US/CA)

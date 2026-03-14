@@ -9,7 +9,7 @@ import msal
 from flask import Flask, redirect, render_template, session, url_for
 from flask_session import Session
 
-from twg_mobile.config import Config
+from config import Config
 
 
 def create_app():
@@ -52,14 +52,14 @@ def create_app():
         return render_template("errors/500.html"), 500
 
     # ---------- Register blueprints ----------
-    from twg_mobile.auth.routes import auth_bp
+    from auth.routes import auth_bp
 
     app.register_blueprint(auth_bp)
 
     # Future feature modules — uncomment as they are built:
-    # from twg_mobile.modules.orders.routes import orders_bp
-    # from twg_mobile.modules.customers.routes import customers_bp
-    # from twg_mobile.modules.inventory.routes import inventory_bp
+    # from modules.orders.routes import orders_bp
+    # from modules.customers.routes import customers_bp
+    # from modules.inventory.routes import inventory_bp
     # app.register_blueprint(orders_bp, url_prefix="/orders")
     # app.register_blueprint(customers_bp, url_prefix="/customers")
     # app.register_blueprint(inventory_bp, url_prefix="/inventory")
