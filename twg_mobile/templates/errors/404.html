@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Not Found — TWG Mobile{% endblock %}
+{% block header_title %}Not Found{% endblock %}
+
+{% block content %}
+<div class="page-padding text-center" style="padding-top: 64px;">
+    <div class="error-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9 9l6 6M15 9l-6 6"/>
+        </svg>
+    </div>
+    <h1 class="error-title">Page Not Found</h1>
+    <p class="error-message">The page you're looking for doesn't exist or has been moved.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-16">Go Home</a>
+</div>
+{% endblock %}

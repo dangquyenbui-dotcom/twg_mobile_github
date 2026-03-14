@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% set active_tab = "home" %}
+{% block title %}Home — TWG Mobile{% endblock %}
+{% block header_title %}Home{% endblock %}
+
+{% block content %}
+<div class="page-padding">
+    <div class="card">
+        <div class="card-header">Welcome back</div>
+        <div class="card-body">
+            <div class="profile-name">{{ user.name }}</div>
+            <div class="profile-detail">{{ user.email }}</div>
+            <div class="profile-detail">Region: {{ user.region }}</div>
+            {% if user.roles %}
+            <div class="profile-roles">
+                {% for role in user.roles %}
+                <span class="badge">{{ role | replace("_", " ") | title }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick-action cards — placeholders for Phase 1 modules -->
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="action-grid">
+        <a href="#" class="action-card">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>New Order</span>
+        </a>
+        <a href="#" class="action-card">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <span>Customer Lookup</span>
+        </a>
+        <a href="#" class="action-card">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <span>Inventory</span>
+        </a>
+        <a href="#" class="action-card">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span>My Orders</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
