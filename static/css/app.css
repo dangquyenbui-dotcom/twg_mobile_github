@@ -5,7 +5,7 @@
    ========================================================================== */
 
 /* ---------- CSS Variables ---------- */
-:root {
+:root, [data-theme="light"] {
     --color-primary: #1a2332;
     --color-primary-light: #2a3a4f;
     --color-accent: #e8731a;
@@ -25,12 +25,24 @@
 
     --header-height: 56px;
     --bottom-nav-height: 64px;
+}
 
-    /* Safe area insets for iPhone notch / home indicator */
-    --sat: env(safe-area-inset-top, 0px);
-    --sab: env(safe-area-inset-bottom, 0px);
-    --sal: env(safe-area-inset-left, 0px);
-    --sar: env(safe-area-inset-right, 0px);
+/* ---------- Dark Theme ---------- */
+[data-theme="dark"] {
+    --color-primary: #0f1720;
+    --color-primary-light: #1a2535;
+    --color-accent: #f08c38;
+    --color-accent-hover: #e8731a;
+    --color-bg: #000000;
+    --color-surface: #111111;
+    --color-text: #f1f3f8;
+    --color-text-secondary: #8b95b0;
+    --color-border: #1e2a3a;
+    --color-danger: #ef4444;
+    --color-success: #22c55e;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* ---------- Reset ---------- */
@@ -43,6 +55,7 @@
 html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    background: var(--color-surface);
 }
 
 body {
@@ -51,10 +64,16 @@ body {
     font-size: 16px;
     line-height: 1.5;
     color: var(--color-text);
-    background: var(--color-bg);
+    background: var(--color-surface);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
-    height: 100vh;
-    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 a {
@@ -72,56 +91,119 @@ button {
 
 /* ---------- App Layout ---------- */
 .app-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: calc(var(--header-height) + var(--sat));
-    padding-top: var(--sat);
+    flex-shrink: 0;
+    height: var(--header-height);
     background: var(--color-primary);
     color: #fff;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     z-index: 100;
-    padding-left: calc(16px + var(--sal));
-    padding-right: calc(16px + var(--sar));
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.header-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.header-brand {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .header-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     letter-spacing: 0.01em;
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* ---------- Theme Toggle ---------- */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--color-accent);
+    transform: scale(1.05);
+}
+
+.theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover svg {
+    transform: rotate(15deg);
+}
+
+/* Show/hide icons based on theme */
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
 .app-content {
-    position: fixed;
-    top: calc(var(--header-height) + var(--sat));
-    bottom: calc(var(--bottom-nav-height) + var(--sab));
-    left: 0;
-    right: 0;
+    flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    min-height: 0;
+    background: var(--color-bg);
 }
 
-/* When there is no bottom nav (e.g. login page) */
-body:not(:has(.bottom-nav)) .app-content {
-    bottom: 0;
+/* When app-content contains a wizard, it becomes a flex column so the wizard
+   steps bar stays pinned and panels scroll independently */
+.app-content:has(.wizard-steps) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* ---------- Bottom Navigation ---------- */
 .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: calc(var(--bottom-nav-height) + var(--sab));
-    padding-bottom: var(--sab);
+    flex-shrink: 0;
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
     display: flex;
-    align-items: stretch;
     z-index: 100;
 }
 
@@ -132,7 +214,7 @@ body:not(:has(.bottom-nav)) .app-content {
     align-items: center;
     justify-content: center;
     gap: 2px;
-    min-height: 44px;
+    height: var(--bottom-nav-height);
     color: var(--color-text-secondary);
     font-size: 11px;
     font-weight: 500;
@@ -151,8 +233,6 @@ body:not(:has(.bottom-nav)) .app-content {
 /* ---------- Page Padding ---------- */
 .page-padding {
     padding: 16px;
-    padding-left: calc(16px + var(--sal));
-    padding-right: calc(16px + var(--sar));
 }
 
 /* ---------- Cards ---------- */
@@ -160,6 +240,7 @@ body:not(:has(.bottom-nav)) .app-content {
     background: var(--color-surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
     overflow: hidden;
     margin-bottom: 16px;
 }
@@ -178,21 +259,65 @@ body:not(:has(.bottom-nav)) .app-content {
     padding: 16px;
 }
 
-/* ---------- Profile ---------- */
-.profile-name {
-    font-size: 22px;
+/* ---------- Greeting ---------- */
+.greeting {
+    padding: 4px 0 16px;
+}
+
+.greeting-text {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.greeting-name {
+    font-size: 24px;
     font-weight: 700;
-    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+}
+
+/* ---------- Profile ---------- */
+.profile-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 1px;
 }
 
 .profile-detail {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--color-text-secondary);
-    margin-bottom: 2px;
+    line-height: 1.4;
 }
 
 .profile-roles {
-    margin-top: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -200,7 +325,7 @@ body:not(:has(.bottom-nav)) .app-content {
 
 .badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 4px 12px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 20px;
@@ -210,9 +335,12 @@ body:not(:has(.bottom-nav)) .app-content {
 
 /* ---------- Section Title ---------- */
 .section-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    margin: 20px 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    margin: 24px 0 12px;
 }
 
 /* ---------- Action Grid ---------- */
@@ -227,15 +355,16 @@ body:not(:has(.bottom-nav)) .app-content {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 20px 12px;
+    gap: 10px;
+    padding: 22px 12px;
     background: var(--color-surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
-    font-size: 14px;
+    border: 1px solid var(--color-border);
+    font-size: 13px;
     font-weight: 600;
-    color: var(--color-primary);
-    min-height: 100px;
+    color: var(--color-text);
+    min-height: 110px;
     transition: box-shadow 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
 }
@@ -245,10 +374,20 @@ body:not(:has(.bottom-nav)) .app-content {
     box-shadow: var(--shadow-md);
 }
 
+.action-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .action-icon {
-    width: 32px;
-    height: 32px;
-    color: var(--color-accent);
+    width: 22px;
+    height: 22px;
+    color: #fff;
 }
 
 /* ---------- Buttons ---------- */
@@ -307,21 +446,15 @@ body:not(:has(.bottom-nav)) .app-content {
 }
 
 .login-logo {
-    margin-bottom: 16px;
+    margin-bottom: 28px;
 }
 
-.login-logo-text {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
-    background: var(--color-primary);
-    color: #fff;
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
+.login-logo-img {
+    width: 96px;
+    height: 96px;
+    border-radius: 22px;
+    object-fit: cover;
+    box-shadow: var(--shadow-md);
 }
 
 .login-heading {
@@ -372,7 +505,6 @@ body:not(:has(.bottom-nav)) .app-content {
     z-index: 201;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-    padding-bottom: var(--sab);
     max-height: 70vh;
     overflow-y: auto;
 }
@@ -521,7 +653,7 @@ body:not(:has(.bottom-nav)) .app-content {
 /* ---------- Offline / Error States ---------- */
 .offline-banner {
     position: fixed;
-    top: calc(var(--header-height) + var(--sat));
+    top: var(--header-height);
     left: 0;
     right: 0;
     padding: 8px 16px;
@@ -542,7 +674,7 @@ body:not(:has(.bottom-nav)) .app-content {
 /* ---------- Pull-to-Refresh Indicator ---------- */
 .pull-indicator {
     position: fixed;
-    top: calc(var(--header-height) + var(--sat));
+    top: var(--header-height);
     left: 50%;
     transform: translateX(-50%) translateY(-48px);
     width: 36px;
@@ -762,6 +894,459 @@ body:not(:has(.bottom-nav)) .app-content {
     font-size: 14px;
     color: var(--color-text-secondary);
     flex-shrink: 0;
+}
+
+/* ---------- Utility ---------- */
+/* ---------- Wizard Steps ---------- */
+.wizard-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: default;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.wizard-step.completed {
+    cursor: pointer;
+}
+
+.wizard-step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--color-border);
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+}
+
+.wizard-step.active .wizard-step-dot {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.wizard-step.completed .wizard-step-dot {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.wizard-step-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-secondary);
+    transition: color 0.2s;
+}
+
+.wizard-step.active .wizard-step-label {
+    color: var(--color-accent);
+}
+
+.wizard-step.completed .wizard-step-label {
+    color: var(--color-success);
+}
+
+.wizard-step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--color-border);
+    margin: 0 6px;
+    margin-bottom: 18px;
+    max-width: 40px;
+}
+
+/* ---------- Wizard Panels ---------- */
+.wizard-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+
+.wizard-panel.active {
+    display: flex;
+}
+
+.wizard-panel > .page-padding {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: 16px;
+}
+
+/* ---------- Wizard Navigation ---------- */
+.wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.wizard-back-btn {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 15px;
+    gap: 4px;
+}
+
+.wizard-next-btn {
+    gap: 6px;
+    min-width: 100px;
+}
+
+.wizard-next-btn:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ---------- Form Row ---------- */
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-col-1 {
+    flex: 1;
+    min-width: 0;
+}
+
+.form-col-2 {
+    flex: 2;
+    min-width: 0;
+}
+
+/* ---------- Customer Selection ---------- */
+.wizard-change-btn {
+    display: block;
+    margin-top: 12px;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* ---------- Collapsible Section ---------- */
+.collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+.collapsible-chevron {
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+}
+
+.collapsible-header.open .collapsible-chevron {
+    transform: rotate(180deg);
+}
+
+.collapsible-body {
+    display: none;
+}
+
+.collapsible-body.open {
+    display: block;
+}
+
+/* ---------- Line Item Cards ---------- */
+.line-item-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.line-item-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    gap: 12px;
+}
+
+.line-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.line-item-desc {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.line-item-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+.line-item-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-accent);
+    flex-shrink: 0;
+}
+
+.line-item-actions {
+    display: flex;
+    border-top: 1px solid var(--color-border);
+}
+
+.line-item-edit,
+.line-item-delete {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.line-item-edit {
+    color: var(--color-accent);
+    border-right: 1px solid var(--color-border);
+}
+
+.line-item-delete {
+    color: var(--color-danger);
+}
+
+.line-item-edit:active,
+.line-item-delete:active {
+    background: var(--color-bg);
+}
+
+/* ---------- Subtotal Bar ---------- */
+.items-subtotal-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--color-primary);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.subtotal-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.subtotal-value {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* ---------- FAB Button ---------- */
+.fab {
+    position: fixed;
+    bottom: 190px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(232, 115, 26, 0.4);
+    z-index: 50;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fab:active {
+    transform: scale(0.92);
+}
+
+/* ---------- Add Item Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-radius: 20px 20px 0 0;
+    z-index: 301;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-overlay.open .modal-sheet {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 12px;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modal-body {
+    padding: 16px 20px 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ---------- Selected Item Banner ---------- */
+.selected-item-banner {
+    padding: 12px 14px;
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border-left: 3px solid var(--color-accent);
+}
+
+.selected-item-name {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.selected-item-no {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+/* ---------- Item Line Total ---------- */
+.item-line-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-top: 1px solid var(--color-border);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.item-line-total span:last-child {
+    color: var(--color-accent);
+    font-size: 18px;
+}
+
+/* ---------- Review Step ---------- */
+.review-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    gap: 12px;
+}
+
+.review-line + .review-line {
+    border-top: 1px solid var(--color-border);
+}
+
+.review-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.review-value {
+    font-size: 14px;
+    text-align: right;
+    word-break: break-word;
+}
+
+.review-total {
+    padding-top: 12px;
+    margin-top: 4px;
+}
+
+.review-total .review-label,
+.review-total .review-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.review-total .review-value {
+    color: var(--color-accent);
 }
 
 /* ---------- Utility ---------- */

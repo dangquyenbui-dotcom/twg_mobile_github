@@ -18,7 +18,7 @@ class Config:
     DEBUG = FLASK_ENV == "development"
 
     # App version — appended to static asset URLs for Cloudflare cache busting
-    APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
+    APP_VERSION = os.environ.get("APP_VERSION", "1.2.2")
 
     # Session — server-side filesystem sessions
     SESSION_TYPE = "filesystem"

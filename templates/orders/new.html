@@ -4,7 +4,450 @@
 {% block header_title %}New Order{% endblock %}
 
 {% block content %}
-<div class="page-padding">
-    <p class="text-secondary">Order entry form coming soon.</p>
+<!-- Wizard Step Indicator -->
+<div class="wizard-steps">
+    <button class="wizard-step active" data-step="1">
+        <span class="wizard-step-dot">1</span>
+        <span class="wizard-step-label">Customer</span>
+    </button>
+    <div class="wizard-step-line"></div>
+    <button class="wizard-step" data-step="2">
+        <span class="wizard-step-dot">2</span>
+        <span class="wizard-step-label">Details</span>
+    </button>
+    <div class="wizard-step-line"></div>
+    <button class="wizard-step" data-step="3">
+        <span class="wizard-step-dot">3</span>
+        <span class="wizard-step-label">Items</span>
+    </button>
+    <div class="wizard-step-line"></div>
+    <button class="wizard-step" data-step="4">
+        <span class="wizard-step-dot">4</span>
+        <span class="wizard-step-label">Review</span>
+    </button>
 </div>
+
+<!-- ==================== STEP 1: Customer Selection ==================== -->
+<div class="wizard-panel active" data-panel="1">
+    <div class="page-padding">
+        <div class="search-bar mb-16">
+            <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" class="form-input" id="customerSearch" placeholder="Search by name, ID, or phone..." autocomplete="off">
+        </div>
+
+        <!-- Search results (hidden by default) -->
+        <div class="card" id="searchResults" style="display:none;">
+            <div class="card-header">Search Results</div>
+            <div id="searchResultsList"></div>
+        </div>
+
+        <!-- Recent Customers -->
+        <h2 class="section-title">Recent Customers</h2>
+        <div class="card" id="recentCustomers">
+            <div class="list-item customer-item" data-customer-id="CUST-1042">
+                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">A</div>
+                <div class="list-item-body">
+                    <div class="list-item-title">Acme Wheel Supply</div>
+                    <div class="list-item-subtitle">CUST-1042 &bull; Dallas, TX</div>
+                </div>
+                <div class="list-item-trailing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            <div class="list-item customer-item" data-customer-id="CUST-2187">
+                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">P</div>
+                <div class="list-item-body">
+                    <div class="list-item-title">Pacific Rim Tires</div>
+                    <div class="list-item-subtitle">CUST-2187 &bull; Los Angeles, CA</div>
+                </div>
+                <div class="list-item-trailing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            <div class="list-item customer-item" data-customer-id="CUST-0839">
+                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">M</div>
+                <div class="list-item-body">
+                    <div class="list-item-title">Midwest Auto Parts</div>
+                    <div class="list-item-subtitle">CUST-0839 &bull; Chicago, IL</div>
+                </div>
+                <div class="list-item-trailing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            <div class="list-item customer-item" data-customer-id="CUST-1550">
+                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">S</div>
+                <div class="list-item-body">
+                    <div class="list-item-title">Southeast Distributors</div>
+                    <div class="list-item-subtitle">CUST-1550 &bull; Atlanta, GA</div>
+                </div>
+                <div class="list-item-trailing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            <div class="list-item customer-item" data-customer-id="CUST-3201">
+                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">N</div>
+                <div class="list-item-body">
+                    <div class="list-item-title">Northeast Wheel Co.</div>
+                    <div class="list-item-subtitle">CUST-3201 &bull; Boston, MA</div>
+                </div>
+                <div class="list-item-trailing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selected customer confirmation (hidden) -->
+        <div class="card" id="selectedCustomerCard" style="display:none;">
+            <div class="card-header">Selected Customer</div>
+            <div class="card-body">
+                <div class="profile-row">
+                    <div class="profile-avatar" id="selectedAvatar" style="width:44px;height:44px;font-size:18px;">A</div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="selectedName">Acme Wheel Supply</div>
+                        <div class="profile-detail" id="selectedId">CUST-1042</div>
+                        <div class="profile-detail" id="selectedAddress">1234 Commerce St, Dallas, TX 75201</div>
+                    </div>
+                </div>
+                <button class="wizard-change-btn" id="changeCustomerBtn">Change Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step nav -->
+    <div class="wizard-nav">
+        <div></div>
+        <button class="btn btn-primary wizard-next-btn" id="step1Next" disabled>
+            Next
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ==================== STEP 2: Order Details ==================== -->
+<div class="wizard-panel" data-panel="2">
+    <div class="page-padding">
+        <!-- Ship To -->
+        <div class="card">
+            <div class="card-header">Ship To</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="shipCompany">Company</label>
+                    <input type="text" class="form-input" id="shipCompany" placeholder="Company name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="shipAddress">Address</label>
+                    <input type="text" class="form-input" id="shipAddress" placeholder="Street address">
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-col-2">
+                        <label class="form-label" for="shipCity">City</label>
+                        <input type="text" class="form-input" id="shipCity" placeholder="City">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="shipState">State</label>
+                        <input type="text" class="form-input" id="shipState" placeholder="TX" maxlength="2">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="shipZip">Zip</label>
+                        <input type="text" class="form-input" id="shipZip" placeholder="75201" inputmode="numeric">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Info -->
+        <div class="card">
+            <div class="card-header">Order Info</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="poNumber">PO Number</label>
+                    <input type="text" class="form-input" id="poNumber" placeholder="Customer PO #">
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="orderDate">Order Date</label>
+                        <input type="date" class="form-input" id="orderDate">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="shipVia">Ship Via</label>
+                        <select class="form-input" id="shipVia">
+                            <option value="">Select...</option>
+                            <option value="UPS">UPS Ground</option>
+                            <option value="FEDEX">FedEx</option>
+                            <option value="FREIGHT">Freight</option>
+                            <option value="WILLCALL">Will Call</option>
+                            <option value="DELIVERY">Our Truck</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="orderComment">Notes</label>
+                    <textarea class="form-input" id="orderComment" rows="2" placeholder="Order notes or special instructions..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Options (collapsible) -->
+        <div class="card">
+            <button class="card-header collapsible-header" id="moreOptionsToggle">
+                Additional Options
+                <svg class="collapsible-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="collapsible-body" id="moreOptionsBody">
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="termsId">Terms</label>
+                            <select class="form-input" id="termsId">
+                                <option value="NET30">Net 30</option>
+                                <option value="NET60">Net 60</option>
+                                <option value="COD">COD</option>
+                                <option value="CIA">Cash in Advance</option>
+                                <option value="CC">Credit Card</option>
+                            </select>
+                        </div>
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="fob">FOB</label>
+                            <select class="form-input" id="fob">
+                                <option value="ORIGIN">Origin</option>
+                                <option value="DEST">Destination</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="taxRate">Tax Rate %</label>
+                            <input type="text" class="form-input" id="taxRate" value="0.00" inputmode="decimal">
+                        </div>
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="discountPct">Discount %</label>
+                            <input type="text" class="form-input" id="discountPct" value="0.00" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="salesperson">Salesperson</label>
+                            <input type="text" class="form-input" id="salesperson" placeholder="Rep ID">
+                        </div>
+                        <div class="form-group form-col-1">
+                            <label class="form-label" for="territory">Territory</label>
+                            <input type="text" class="form-input" id="territory" placeholder="Territory">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="orderRef">Order Ref #</label>
+                        <input type="text" class="form-input" id="orderRef" placeholder="Reference number">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-nav">
+        <button class="btn wizard-back-btn" data-goto="1">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+            Back
+        </button>
+        <button class="btn btn-primary wizard-next-btn" data-goto="3">
+            Next
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ==================== STEP 3: Line Items ==================== -->
+<div class="wizard-panel" data-panel="3">
+    <div class="page-padding" id="lineItemsContainer">
+        <!-- Empty state -->
+        <div class="empty-state" id="itemsEmptyState">
+            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <div class="empty-state-title">No Items Added</div>
+            <div class="empty-state-message">Tap the + button to add items to this order.</div>
+        </div>
+
+        <!-- Line item cards (added dynamically) -->
+        <div id="lineItemsList"></div>
+    </div>
+
+    <!-- Running subtotal bar -->
+    <div class="items-subtotal-bar" id="subtotalBar" style="display:none;">
+        <span class="subtotal-label">Subtotal</span>
+        <span class="subtotal-value" id="runningSubtotal">$0.00</span>
+    </div>
+
+    <!-- FAB - Add Item -->
+    <button class="fab" id="addItemFab" title="Add item">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14m7-7H5"/>
+        </svg>
+    </button>
+
+    <div class="wizard-nav">
+        <button class="btn wizard-back-btn" data-goto="2">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+            Back
+        </button>
+        <button class="btn btn-primary wizard-next-btn" id="step3Next" disabled data-goto="4">
+            Review
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- ==================== STEP 4: Review & Submit ==================== -->
+<div class="wizard-panel" data-panel="4">
+    <div class="page-padding">
+        <!-- Customer Summary -->
+        <div class="card">
+            <div class="card-header">Customer</div>
+            <div class="card-body">
+                <div class="review-line"><span class="review-label">Name</span><span class="review-value" id="revCustomer">—</span></div>
+                <div class="review-line"><span class="review-label">ID</span><span class="review-value" id="revCustId">—</span></div>
+            </div>
+        </div>
+
+        <!-- Shipping Summary -->
+        <div class="card">
+            <div class="card-header">Shipping</div>
+            <div class="card-body">
+                <div class="review-line"><span class="review-label">Ship To</span><span class="review-value" id="revShipTo">—</span></div>
+                <div class="review-line"><span class="review-label">PO #</span><span class="review-value" id="revPO">—</span></div>
+                <div class="review-line"><span class="review-label">Ship Via</span><span class="review-value" id="revShipVia">—</span></div>
+                <div class="review-line"><span class="review-label">Date</span><span class="review-value" id="revDate">—</span></div>
+                <div class="review-line"><span class="review-label">Terms</span><span class="review-value" id="revTerms">—</span></div>
+            </div>
+        </div>
+
+        <!-- Line Items Summary -->
+        <div class="card">
+            <div class="card-header">Items</div>
+            <div id="revItemsList"></div>
+        </div>
+
+        <!-- Totals -->
+        <div class="card">
+            <div class="card-body">
+                <div class="review-line"><span class="review-label">Subtotal</span><span class="review-value" id="revSubtotal">$0.00</span></div>
+                <div class="review-line"><span class="review-label">Tax</span><span class="review-value" id="revTax">$0.00</span></div>
+                <div class="review-line review-total"><span class="review-label">Total</span><span class="review-value" id="revTotal">$0.00</span></div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary btn-block mt-16" id="placeOrderBtn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+            Place Order
+        </button>
+        <div style="height:16px;"></div>
+    </div>
+
+    <div class="wizard-nav">
+        <button class="btn wizard-back-btn" data-goto="3">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+            Back
+        </button>
+        <div></div>
+    </div>
+</div>
+
+<!-- ==================== Add Item Modal ==================== -->
+<div class="modal-overlay" id="addItemModal">
+    <div class="modal-sheet">
+        <div class="modal-header">
+            <span class="modal-title" id="itemModalTitle">Add Item</span>
+            <button class="menu-close" id="closeItemModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Item search -->
+            <div class="search-bar mb-16">
+                <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" class="form-input" id="itemSearch" placeholder="Search by item #, name, or barcode..." autocomplete="off">
+            </div>
+
+            <!-- Item search results -->
+            <div id="itemSearchResults" class="mb-16">
+                <div class="list-item item-result" data-item-no="WHL-1001" data-desc="Steel Wheel 16x6.5" data-price="89.50" data-uom="EA">
+                    <div class="list-item-body">
+                        <div class="list-item-title">Steel Wheel 16x6.5</div>
+                        <div class="list-item-subtitle">WHL-1001 &bull; $89.50/EA</div>
+                    </div>
+                </div>
+                <div class="list-item item-result" data-item-no="WHL-2003" data-desc="Aluminum Wheel 17x7" data-price="145.00" data-uom="EA">
+                    <div class="list-item-body">
+                        <div class="list-item-title">Aluminum Wheel 17x7</div>
+                        <div class="list-item-subtitle">WHL-2003 &bull; $145.00/EA</div>
+                    </div>
+                </div>
+                <div class="list-item item-result" data-item-no="WHL-3050" data-desc="Chrome Wheel 20x8.5" data-price="224.75" data-uom="EA">
+                    <div class="list-item-body">
+                        <div class="list-item-title">Chrome Wheel 20x8.5</div>
+                        <div class="list-item-subtitle">WHL-3050 &bull; $224.75/EA</div>
+                    </div>
+                </div>
+                <div class="list-item item-result" data-item-no="TIR-4410" data-desc="All-Season Tire 225/60R16" data-price="112.00" data-uom="EA">
+                    <div class="list-item-body">
+                        <div class="list-item-title">All-Season Tire 225/60R16</div>
+                        <div class="list-item-subtitle">TIR-4410 &bull; $112.00/EA</div>
+                    </div>
+                </div>
+                <div class="list-item item-result" data-item-no="ACC-5500" data-desc="Lug Nut Set (20pc)" data-price="18.50" data-uom="SET">
+                    <div class="list-item-body">
+                        <div class="list-item-title">Lug Nut Set (20pc)</div>
+                        <div class="list-item-subtitle">ACC-5500 &bull; $18.50/SET</div>
+                    </div>
+                </div>
+                <div class="list-item item-result" data-item-no="ACC-6010" data-desc="Center Cap - Chrome" data-price="12.75" data-uom="EA">
+                    <div class="list-item-body">
+                        <div class="list-item-title">Center Cap - Chrome</div>
+                        <div class="list-item-subtitle">ACC-6010 &bull; $12.75/EA</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item detail form (hidden until item selected) -->
+            <div id="itemDetailForm" style="display:none;">
+                <div class="selected-item-banner" id="selectedItemBanner">
+                    <div class="selected-item-name" id="selItemName">—</div>
+                    <div class="selected-item-no" id="selItemNo">—</div>
+                    <button class="wizard-change-btn" id="changeItemBtn">Change Item</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="itemQty">Quantity</label>
+                        <input type="number" class="form-input" id="itemQty" value="1" min="1" inputmode="numeric">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="itemUom">U/M</label>
+                        <input type="text" class="form-input" id="itemUom" value="EA" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="itemPrice">Unit Price</label>
+                        <input type="text" class="form-input" id="itemPrice" inputmode="decimal">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="itemDiscount">Discount %</label>
+                        <input type="text" class="form-input" id="itemDiscount" value="0" inputmode="decimal">
+                    </div>
+                </div>
+                <div class="item-line-total">
+                    <span>Line Total</span>
+                    <span id="itemLineTotal">$0.00</span>
+                </div>
+                <button class="btn btn-primary btn-block mt-16" id="confirmAddItem">Add to Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/order-entry.js') }}?v={{ app_version }}"></script>
 {% endblock %}

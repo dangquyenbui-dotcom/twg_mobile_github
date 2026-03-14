@@ -23,11 +23,15 @@ def create_app():
     Session(app)
 
     # ---------- MSAL confidential client ----------
-    app.msal_app = msal.ConfidentialClientApplication(
-        client_id=app.config["AZURE_CLIENT_ID"],
-        client_credential=app.config["AZURE_CLIENT_SECRET"],
-        authority=app.config["AZURE_AUTHORITY"],
-    )
+    if app.config["AZURE_CLIENT_ID"] and app.config["AZURE_TENANT_ID"]:
+        app.msal_app = msal.ConfidentialClientApplication(
+            client_id=app.config["AZURE_CLIENT_ID"],
+            client_credential=app.config["AZURE_CLIENT_SECRET"],
+            authority=app.config["AZURE_AUTHORITY"],
+        )
+    else:
+        app.msal_app = None
+        app.logger.warning("MSAL not configured — Azure credentials missing")
 
     # ---------- Template globals ----------
     @app.context_processor
@@ -56,13 +60,29 @@ def create_app():
 
     app.register_blueprint(auth_bp)
 
+    # Feature modules
+    from modules.orders.routes import orders_bp
+    app.register_blueprint(orders_bp, url_prefix="/orders")
+
     # Future feature modules — uncomment as they are built:
-    # from modules.orders.routes import orders_bp
     # from modules.customers.routes import customers_bp
     # from modules.inventory.routes import inventory_bp
-    # app.register_blueprint(orders_bp, url_prefix="/orders")
     # app.register_blueprint(customers_bp, url_prefix="/customers")
     # app.register_blueprint(inventory_bp, url_prefix="/inventory")
+
+    # ---------- Dev bypass: auto-login when MSAL is not configured ----------
+    if app.msal_app is None:
+
+        @app.before_request
+        def _dev_auto_login():
+            if "user" not in session:
+                session["user"] = {
+                    "name": "Dev User",
+                    "email": "dev@twg.com",
+                    "oid": "00000000-0000-0000-0000-000000000000",
+                    "roles": ["admin"],
+                    "region": "US",
+                }
 
     # ---------- Root route ----------
     @app.route("/")
@@ -79,3 +99,8 @@ def create_app():
         return render_template("offline.html")
 
     return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True, host="0.0.0.0", port=5000)

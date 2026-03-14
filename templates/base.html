@@ -1,21 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="TWG Mobile">
     <meta name="theme-color" content="#1a2332">
     <meta name="app-version" content="{{ app_version }}">
+
+    <!-- Theme init — runs before render to prevent flash of wrong theme -->
+    <script>
+    (function(){
+        var saved = localStorage.getItem('twg-theme');
+        if (saved === 'dark' || saved === 'light') {
+            document.documentElement.setAttribute('data-theme', saved);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.content = saved === 'dark' ? '#0f1720' : '#1a2332';
+        }
+    })();
+    </script>
 
     <title>{% block title %}TWG Mobile{% endblock %}</title>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v={{ app_version }}">
 
-    <!-- Apple touch icon -->
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <!-- Apple touch icons (Add to Home Screen) -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512.png') }}">
 
     <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ app_version }}">
@@ -26,8 +40,21 @@
 
     <!-- Top header bar -->
     <header class="app-header">
-        <div class="header-title">{% block header_title %}TWG Mobile{% endblock %}</div>
-        {% block header_actions %}{% endblock %}
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" alt="TWG" class="header-logo">
+            <span class="header-brand">TWG Mobile</span>
+        </div>
+        <div class="header-title">{% block header_title %}{% endblock %}</div>
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode" aria-label="Toggle the theme">
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
+                </svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 1118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>
+                </svg>
+            </button>
+        </div>
     </header>
 
     <!-- Main content area — scrollable -->
@@ -45,7 +72,7 @@
             </svg>
             <span>Home</span>
         </a>
-        <a href="#"
+        <a href="{{ url_for('orders.new_order') }}"
            class="nav-item {% if active_tab == 'orders' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>

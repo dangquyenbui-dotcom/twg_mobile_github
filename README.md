@@ -3,6 +3,27 @@
 Mobile-first Progressive Web App for The Wheel Group sales team.
 Built with Flask, Microsoft Entra ID SSO, and SQL Server.
 
+## Status
+
+**Phase: Foundation Scaffold**
+
+The wireframe and core infrastructure are in place. The following is ready:
+
+- Flask app factory with server-side sessions
+- Microsoft Entra ID SSO (login, callback, logout, profile)
+- Role-based access control (sales_rep, inside_sales, sales_manager, admin)
+- Dual-region database helper (US/PRO05, CA/PRO06)
+- PWA shell (manifest, service worker, offline fallback)
+- Responsive mobile-first UI with bottom navigation
+- Error pages (403, 404, 500)
+
+**Pending:**
+
+- Orders module (routes, queries, templates stubbed)
+- Customers module (routes, queries, templates stubbed)
+- Inventory module (routes, queries, templates stubbed)
+- PWA icons (192px, 512px, and maskable variants)
+
 ## Prerequisites
 
 - Python 3.10+
@@ -14,7 +35,7 @@ Built with Flask, Microsoft Entra ID SSO, and SQL Server.
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/your-org/twg_mobile_github.git
+git clone https://github.com/dangquyenbui-dotcom/twg_mobile_github.git
 cd twg_mobile_github
 
 # Create and activate a virtual environment
@@ -34,7 +55,7 @@ cp .env.example .env
 
 ```bash
 # Development
-flask --app app:create_app run --debug
+python app.py
 
 # Production (example with gunicorn)
 gunicorn "app:create_app()" --bind 0.0.0.0:8000
@@ -47,13 +68,28 @@ twg_mobile_github/
   app.py              # Flask app factory
   config.py           # Environment-based configuration
   db.py               # pyodbc connection helper (US/CA)
-  auth/               # Entra ID SSO login/logout/callback
+  auth/
+    routes.py         # Entra ID SSO login/logout/callback/profile
+    decorators.py     # @login_required, @role_required
   modules/
-    orders/           # Order entry & dashboard
-    customers/        # Customer lookup
+    orders/           # Order entry & dashboard (stub)
+    customers/        # Customer lookup (stub)
+    inventory/        # Inventory search (stub)
+  static/
+    css/app.css       # Mobile-first responsive styles
+    js/app.js         # PWA registration, pull-to-refresh, navigation
+    js/dialogs.js     # Reusable dialog/toast components
+    manifest.json     # PWA manifest
+    sw.js             # Service worker (cache-first strategy)
+    icons/            # PWA icons (to be added)
+  templates/
+    base.html         # Base layout with header, bottom nav, sidebar
+    auth/             # Login and profile pages
+    orders/           # Order list, detail, new order forms
+    customers/        # Customer list and detail
     inventory/        # Inventory search
-  static/             # CSS, JS, PWA manifest, service worker
-  templates/          # Jinja2 templates
+    errors/           # 403, 404, 500 error pages
+    offline.html      # Offline fallback page
 ```
 
 ## Environment Variables

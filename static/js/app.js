@@ -28,6 +28,27 @@
     }
 
     // ------------------------------------------------------------------
+    // Theme Toggle (dark / light)
+    // ------------------------------------------------------------------
+    var themeToggle = document.getElementById("themeToggle");
+    if (themeToggle) {
+        themeToggle.addEventListener("click", function () {
+            var html = document.documentElement;
+            var current = html.getAttribute("data-theme") || "light";
+            var next = current === "dark" ? "light" : "dark";
+
+            html.setAttribute("data-theme", next);
+            localStorage.setItem("twg-theme", next);
+
+            // Update meta theme-color to match header
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+                meta.content = next === "dark" ? "#0f1720" : "#1a2332";
+            }
+        });
+    }
+
+    // ------------------------------------------------------------------
     // Slide-Up Menu Panel
     // ------------------------------------------------------------------
     var menuBtn = document.getElementById("nav-menu-btn");
@@ -92,6 +113,8 @@
         content.addEventListener(
             "touchstart",
             function (e) {
+                // Disable pull-to-refresh inside wizard (order entry, etc.)
+                if (content.querySelector(".wizard-steps")) return;
                 if (content.scrollTop === 0) {
                     pullStartY = e.touches[0].clientY;
                     pulling = true;
