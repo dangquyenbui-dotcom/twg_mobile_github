@@ -3,8 +3,10 @@ TWG Mobile — Flask Application Factory
 """
 
 import os
+from datetime import datetime
+
 import msal
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, render_template, session, url_for
 from flask_session import Session
 
 from twg_mobile.config import Config
@@ -30,8 +32,24 @@ def create_app():
     # ---------- Template globals ----------
     @app.context_processor
     def inject_globals():
-        """Make app_version available in every template for cache busting."""
-        return {"app_version": app.config["APP_VERSION"]}
+        """Make common variables available in every template."""
+        return {
+            "app_version": app.config["APP_VERSION"],
+            "current_year": datetime.now().year,
+        }
+
+    # ---------- Error handlers ----------
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template("errors/403.html"), 403
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return render_template("errors/500.html"), 500
 
     # ---------- Register blueprints ----------
     from twg_mobile.auth.routes import auth_bp
@@ -50,11 +68,14 @@ def create_app():
     @app.route("/")
     def index():
         """Redirect to the home/dashboard page (orders for now)."""
-        from flask import session as flask_session
-
-        if "user" not in flask_session:
+        if "user" not in session:
             return redirect(url_for("auth.login"))
         # Once the orders module is live this will point there.
         return redirect(url_for("auth.profile"))
+
+    # ---------- Offline fallback (served by the service worker) ----------
+    @app.route("/offline")
+    def offline():
+        return render_template("offline.html")
 
     return app

@@ -26,14 +26,21 @@ class Config:
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True
 
-    # ---------- Microsoft Entra ID (Azure AD) ----------
+    # ---------------------------------------------------------------------------
+    # Microsoft Entra ID (Azure AD) — MSAL configuration
+    # ---------------------------------------------------------------------------
     AZURE_CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
     AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
     AZURE_TENANT_ID = os.environ.get("AZURE_TENANT_ID", "")
     AZURE_REDIRECT_URI = os.environ.get("AZURE_REDIRECT_URI", "")
     AZURE_AUTHORITY = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}"
 
-    # ---------- Database connections (SQL Server via pyodbc) ----------
+    # Scopes requested during login
+    AZURE_SCOPES = ["User.Read"]
+
+    # ---------------------------------------------------------------------------
+    # Database — dual SQL Server connections (US = PRO05, CA = PRO06)
+    # ---------------------------------------------------------------------------
     DB_US_SERVER = os.environ.get("DB_US_SERVER", "")
     DB_US_NAME = os.environ.get("DB_US_NAME", "")
     DB_CA_SERVER = os.environ.get("DB_CA_SERVER", "")
@@ -41,20 +48,31 @@ class Config:
     DB_USERNAME = os.environ.get("DB_USERNAME", "")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 
-    # ---------- Role → Entra Security Group mapping ----------
-    # Each value is the Object ID of an Azure AD Security Group.
+    # ---------------------------------------------------------------------------
+    # Role ↔ Entra ID Security Group mapping
+    # Keys = Entra Security Group Object IDs, values = internal role names.
+    # ---------------------------------------------------------------------------
     GROUP_SALES_REP = os.environ.get("GROUP_SALES_REP", "")
     GROUP_INSIDE_SALES = os.environ.get("GROUP_INSIDE_SALES", "")
     GROUP_SALES_MANAGER = os.environ.get("GROUP_SALES_MANAGER", "")
     GROUP_ADMIN = os.environ.get("GROUP_ADMIN", "")
 
-    # Convenient lookup: group Object ID → internal role name
-    @classmethod
-    def group_role_map(cls):
-        """Return a dict mapping Entra group Object IDs to role names."""
-        return {
-            cls.GROUP_SALES_REP: "sales_rep",
-            cls.GROUP_INSIDE_SALES: "inside_sales",
-            cls.GROUP_SALES_MANAGER: "sales_manager",
-            cls.GROUP_ADMIN: "admin",
-        }
+    # Inverted lookup used by auth callback: group Object ID → role name.
+    # Built at import time; empty strings are excluded so blank env vars
+    # don't pollute the map.
+    @staticmethod
+    def _build_group_role_map():
+        mapping = {}
+        pairs = [
+            ("GROUP_SALES_REP", "sales_rep"),
+            ("GROUP_INSIDE_SALES", "inside_sales"),
+            ("GROUP_SALES_MANAGER", "sales_manager"),
+            ("GROUP_ADMIN", "admin"),
+        ]
+        for env_key, role in pairs:
+            gid = os.environ.get(env_key, "")
+            if gid:
+                mapping[gid] = role
+        return mapping
+
+    GROUP_ROLE_MAP = _build_group_role_map()

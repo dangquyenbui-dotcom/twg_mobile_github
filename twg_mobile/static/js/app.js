@@ -1,6 +1,7 @@
 /**
  * TWG Mobile — PWA Shell & Core JS
- * Service worker registration, bottom-nav menu, offline detection.
+ * Service worker registration, bottom-nav menu, offline detection,
+ * pull-to-refresh with visual indicator.
  */
 
 (function () {
@@ -8,11 +9,15 @@
 
     // ------------------------------------------------------------------
     // Service Worker Registration
+    // Pass APP_VERSION so the SW creates a version-specific cache.
+    // The <meta name="app-version"> tag is set in base.html.
     // ------------------------------------------------------------------
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
+            var versionMeta = document.querySelector('meta[name="app-version"]');
+            var version = versionMeta ? versionMeta.content : "1";
             navigator.serviceWorker
-                .register("/static/sw.js")
+                .register("/static/sw.js?v=" + version)
                 .then(function (reg) {
                     console.log("[TWG] Service worker registered:", reg.scope);
                 })
@@ -32,13 +37,13 @@
 
     function openMenu(e) {
         if (e) e.preventDefault();
-        menuOverlay.classList.add("open");
-        menuPanel.classList.add("open");
+        if (menuOverlay) menuOverlay.classList.add("open");
+        if (menuPanel) menuPanel.classList.add("open");
     }
 
     function closeMenu() {
-        menuOverlay.classList.remove("open");
-        menuPanel.classList.remove("open");
+        if (menuOverlay) menuOverlay.classList.remove("open");
+        if (menuPanel) menuPanel.classList.remove("open");
     }
 
     if (menuBtn) menuBtn.addEventListener("click", openMenu);
@@ -50,7 +55,7 @@
     // ------------------------------------------------------------------
     var offlineBanner = document.createElement("div");
     offlineBanner.className = "offline-banner";
-    offlineBanner.textContent = "You are offline — some features may be unavailable.";
+    offlineBanner.textContent = "You are offline \u2014 some features may be unavailable.";
     document.body.appendChild(offlineBanner);
 
     function updateOnlineStatus() {
@@ -66,13 +71,24 @@
     updateOnlineStatus();
 
     // ------------------------------------------------------------------
-    // Pull-to-Refresh (basic — triggers page reload)
+    // Pull-to-Refresh with visual indicator
     // ------------------------------------------------------------------
     var content = document.getElementById("app-content");
     var pullStartY = 0;
     var pulling = false;
+    var PULL_THRESHOLD = 80;
+
+    // Create the visual pull indicator
+    var pullIndicator = document.createElement("div");
+    pullIndicator.className = "pull-indicator";
+    pullIndicator.innerHTML =
+        '<svg class="pull-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+        '<path d="M12 19V5M5 12l7-7 7 7"/>' +
+        '</svg>';
 
     if (content) {
+        content.parentNode.insertBefore(pullIndicator, content);
+
         content.addEventListener(
             "touchstart",
             function (e) {
@@ -85,13 +101,41 @@
         );
 
         content.addEventListener(
+            "touchmove",
+            function (e) {
+                if (!pulling) return;
+                var distance = e.touches[0].clientY - pullStartY;
+                if (distance > 0 && distance <= 120) {
+                    var progress = Math.min(distance / PULL_THRESHOLD, 1);
+                    pullIndicator.style.transform = "translateY(" + (distance * 0.4) + "px)";
+                    pullIndicator.style.opacity = progress;
+                    if (progress >= 1) {
+                        pullIndicator.classList.add("ready");
+                    } else {
+                        pullIndicator.classList.remove("ready");
+                    }
+                }
+            },
+            { passive: true }
+        );
+
+        content.addEventListener(
             "touchend",
             function (e) {
                 if (!pulling) return;
                 var pullDistance = e.changedTouches[0].clientY - pullStartY;
                 pulling = false;
-                if (pullDistance > 80) {
+
+                if (pullDistance >= PULL_THRESHOLD) {
+                    pullIndicator.classList.add("refreshing");
+                    pullIndicator.classList.remove("ready");
+                    pullIndicator.style.transform = "translateY(32px)";
+                    pullIndicator.style.opacity = "1";
                     window.location.reload();
+                } else {
+                    pullIndicator.style.transform = "";
+                    pullIndicator.style.opacity = "0";
+                    pullIndicator.classList.remove("ready");
                 }
             },
             { passive: true }

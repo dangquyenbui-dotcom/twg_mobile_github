@@ -38,8 +38,10 @@ def login_start():
     state = str(uuid.uuid4())
     session["auth_state"] = state
 
+    scopes = current_app.config["AZURE_SCOPES"]
+
     auth_url = current_app.msal_app.get_authorization_request_url(
-        scopes=["User.Read"],
+        scopes=scopes,
         state=state,
         redirect_uri=current_app.config["AZURE_REDIRECT_URI"],
     )
@@ -63,10 +65,12 @@ def callback():
     if not code:
         return redirect(url_for("auth.login"))
 
+    scopes = current_app.config["AZURE_SCOPES"]
+
     # Exchange code for tokens
     result = current_app.msal_app.acquire_token_by_authorization_code(
         code,
-        scopes=["User.Read"],
+        scopes=scopes,
         redirect_uri=current_app.config["AZURE_REDIRECT_URI"],
     )
 
@@ -79,15 +83,12 @@ def callback():
 
     # Map Entra group Object IDs to internal role names
     group_ids = id_claims.get("groups", [])
-
-    # Build role list from group membership
-    grp_to_role = {
-        current_app.config["GROUP_SALES_REP"]: "sales_rep",
-        current_app.config["GROUP_INSIDE_SALES"]: "inside_sales",
-        current_app.config["GROUP_SALES_MANAGER"]: "sales_manager",
-        current_app.config["GROUP_ADMIN"]: "admin",
-    }
-    roles = [role for gid, role in grp_to_role.items() if gid in group_ids]
+    group_role_map = current_app.config.get("GROUP_ROLE_MAP") or {}
+    roles = [
+        group_role_map[gid]
+        for gid in group_ids
+        if gid in group_role_map
+    ]
 
     # Determine region from a custom claim or default to US
     # (Can be refined later to pull from user profile or DB)

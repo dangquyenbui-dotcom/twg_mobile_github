@@ -539,6 +539,231 @@ body:not(:has(.bottom-nav)) .app-content {
     transform: translateY(0);
 }
 
+/* ---------- Pull-to-Refresh Indicator ---------- */
+.pull-indicator {
+    position: fixed;
+    top: calc(var(--header-height) + var(--sat));
+    left: 50%;
+    transform: translateX(-50%) translateY(-48px);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+    z-index: 98;
+    opacity: 0;
+    transition: opacity 0.15s;
+    color: var(--color-accent);
+}
+
+.pull-indicator.ready {
+    color: var(--color-success);
+}
+
+.pull-spinner {
+    width: 20px;
+    height: 20px;
+}
+
+.pull-indicator.refreshing .pull-spinner {
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Form Inputs ---------- */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    min-height: 48px;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.form-input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+}
+
+/* Search bar variation */
+.search-bar {
+    position: relative;
+}
+
+.search-bar .form-input {
+    padding-left: 44px;
+}
+
+.search-bar-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--color-text-secondary);
+    pointer-events: none;
+}
+
+/* ---------- Loading Spinner ---------- */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    color: var(--color-text-secondary);
+    gap: 12px;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+.loading-text {
+    font-size: 14px;
+}
+
+/* ---------- Empty State ---------- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    color: var(--color-border);
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.empty-state-message {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    max-width: 260px;
+}
+
+/* ---------- Error Pages ---------- */
+.error-icon {
+    margin-bottom: 20px;
+}
+
+.error-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.error-message {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* ---------- List Items ---------- */
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    min-height: 56px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.list-item:active {
+    background: var(--color-bg);
+}
+
+.list-item:first-child {
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.list-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.list-item:only-child {
+    border-radius: var(--radius);
+}
+
+.list-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-item-title {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-item-subtitle {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-item-trailing {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
 /* ---------- Utility ---------- */
 .text-center { text-align: center; }
 .text-secondary { color: var(--color-text-secondary); }

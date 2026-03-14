@@ -5,4 +5,4 @@ Placeholder — to be implemented in Phase 1.
 
 from flask import Blueprint
 
-customers_bp = Blueprint("customers", __name__, template_folder="../../templates/customers")
+customers_bp = Blueprint("customers", __name__)
