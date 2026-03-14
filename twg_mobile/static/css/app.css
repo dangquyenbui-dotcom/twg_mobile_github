@@ -1,0 +1,548 @@
+/* ==========================================================================
+   TWG Mobile — Mobile-First Stylesheet
+   Colors: Navy primary (#1a2332), Orange accent (#e8731a), neutral grays
+   Touch targets: minimum 44px
+   ========================================================================== */
+
+/* ---------- CSS Variables ---------- */
+:root {
+    --color-primary: #1a2332;
+    --color-primary-light: #2a3a4f;
+    --color-accent: #e8731a;
+    --color-accent-hover: #d4660f;
+    --color-bg: #f4f5f7;
+    --color-surface: #ffffff;
+    --color-text: #1a2332;
+    --color-text-secondary: #6b7280;
+    --color-border: #e5e7eb;
+    --color-danger: #dc2626;
+    --color-success: #16a34a;
+
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    --header-height: 56px;
+    --bottom-nav-height: 64px;
+
+    /* Safe area insets for iPhone notch / home indicator */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+                 Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-text);
+    background: var(--color-bg);
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    font: inherit;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+/* ---------- App Layout ---------- */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--header-height) + var(--sat));
+    padding-top: var(--sat);
+    background: var(--color-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding-left: calc(16px + var(--sal));
+    padding-right: calc(16px + var(--sar));
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.app-content {
+    position: fixed;
+    top: calc(var(--header-height) + var(--sat));
+    bottom: calc(var(--bottom-nav-height) + var(--sab));
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+}
+
+/* When there is no bottom nav (e.g. login page) */
+body:not(:has(.bottom-nav)) .app-content {
+    bottom: 0;
+}
+
+/* ---------- Bottom Navigation ---------- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--bottom-nav-height) + var(--sab));
+    padding-bottom: var(--sab);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: stretch;
+    z-index: 100;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 44px;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+.nav-item.active {
+    color: var(--color-accent);
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* ---------- Page Padding ---------- */
+.page-padding {
+    padding: 16px;
+    padding-left: calc(16px + var(--sal));
+    padding-right: calc(16px + var(--sar));
+}
+
+/* ---------- Cards ---------- */
+.card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.card-header {
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-body {
+    padding: 16px;
+}
+
+/* ---------- Profile ---------- */
+.profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.profile-detail {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+}
+
+.profile-roles {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    background: var(--color-accent);
+    color: #fff;
+}
+
+/* ---------- Section Title ---------- */
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 20px 0 12px;
+}
+
+/* ---------- Action Grid ---------- */
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    min-height: 100px;
+    transition: box-shadow 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-card:active {
+    transform: scale(0.97);
+    box-shadow: var(--shadow-md);
+}
+
+.action-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--color-accent);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    min-height: 48px;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.btn-primary:active {
+    background: var(--color-accent-hover);
+}
+
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* ---------- Login Page ---------- */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 340px;
+}
+
+.login-logo {
+    margin-bottom: 16px;
+}
+
+.login-logo-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.login-heading {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.login-subheading {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 32px;
+}
+
+.login-btn {
+    margin-top: 8px;
+}
+
+.login-footer {
+    margin-top: 48px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- Slide-Up Menu Panel ---------- */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+}
+
+.menu-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.menu-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-radius: 20px 20px 0 0;
+    z-index: 201;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    padding-bottom: var(--sab);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.menu-panel.open {
+    transform: translateY(0);
+}
+
+.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.menu-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.menu-close {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--color-text-secondary);
+    border-radius: 50%;
+}
+
+.menu-body {
+    padding: 12px 20px 20px;
+}
+
+.menu-user {
+    padding: 12px 0 16px;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 8px;
+}
+
+.menu-user-name {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.menu-user-email {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.menu-link--danger {
+    color: var(--color-danger);
+}
+
+/* ---------- Custom Dialog ---------- */
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.dialog-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dialog-box {
+    width: 100%;
+    max-width: 320px;
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+}
+
+.dialog-overlay.open .dialog-box {
+    transform: scale(1);
+}
+
+.dialog-title {
+    padding: 20px 20px 8px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.dialog-message {
+    padding: 0 20px 20px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.dialog-actions {
+    display: flex;
+    border-top: 1px solid var(--color-border);
+}
+
+.dialog-btn {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    min-height: 48px;
+    transition: background 0.1s;
+}
+
+.dialog-btn:active {
+    background: var(--color-bg);
+}
+
+.dialog-btn + .dialog-btn {
+    border-left: 1px solid var(--color-border);
+}
+
+.dialog-btn--primary {
+    color: var(--color-accent);
+}
+
+.dialog-btn--danger {
+    color: var(--color-danger);
+}
+
+/* ---------- Offline / Error States ---------- */
+.offline-banner {
+    position: fixed;
+    top: calc(var(--header-height) + var(--sat));
+    left: 0;
+    right: 0;
+    padding: 8px 16px;
+    background: var(--color-danger);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    z-index: 99;
+    transform: translateY(-100%);
+    transition: transform 0.3s;
+}
+
+.offline-banner.visible {
+    transform: translateY(0);
+}
+
+/* ---------- Utility ---------- */
+.text-center { text-align: center; }
+.text-secondary { color: var(--color-text-secondary); }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }

@@ -1,0 +1,22 @@
+{
+    "name": "TWG Mobile",
+    "short_name": "TWG",
+    "description": "The Wheel Group — Mobile Sales Portal",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#f4f5f7",
+    "theme_color": "#1a2332",
+    "icons": [
+        {
+            "src": "/static/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TWG Mobile">
+    <meta name="theme-color" content="#1a2332">
+
+    <title>{% block title %}TWG Mobile{% endblock %}</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v={{ app_version }}">
+
+    <!-- Apple touch icon -->
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ app_version }}">
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Top header bar -->
+    <header class="app-header">
+        <div class="header-title">{% block header_title %}TWG Mobile{% endblock %}</div>
+        {% block header_actions %}{% endblock %}
+    </header>
+
+    <!-- Main content area — scrollable -->
+    <main class="app-content" id="app-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom navigation bar (visible only when authenticated) -->
+    {% if session.get("user") %}
+    <nav class="bottom-nav" id="bottom-nav">
+        <a href="{{ url_for('index') }}"
+           class="nav-item {% if active_tab == 'home' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>
+            </svg>
+            <span>Home</span>
+        </a>
+        <a href="#"
+           class="nav-item {% if active_tab == 'orders' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+            <span>Orders</span>
+        </a>
+        <a href="#"
+           class="nav-item {% if active_tab == 'customers' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Customers</span>
+        </a>
+        <a href="#"
+           class="nav-item {% if active_tab == 'inventory' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <span>Inventory</span>
+        </a>
+        <a href="#"
+           class="nav-item {% if active_tab == 'menu' %}active{% endif %}"
+           id="nav-menu-btn">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <span>Menu</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <!-- Slide-up menu panel -->
+    <div class="menu-overlay" id="menu-overlay"></div>
+    <div class="menu-panel" id="menu-panel">
+        <div class="menu-header">
+            <span class="menu-title">Menu</span>
+            <button class="menu-close" id="menu-close-btn" aria-label="Close menu">&times;</button>
+        </div>
+        <div class="menu-body">
+            {% if session.get("user") %}
+            <div class="menu-user">
+                <div class="menu-user-name">{{ session["user"]["name"] }}</div>
+                <div class="menu-user-email">{{ session["user"]["email"] }}</div>
+            </div>
+            <a href="{{ url_for('auth.profile') }}" class="menu-link">My Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="menu-link menu-link--danger">Sign Out</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Custom dialog container (TWG-branded, no native alerts) -->
+    <div class="dialog-overlay" id="dialog-overlay">
+        <div class="dialog-box" id="dialog-box">
+            <div class="dialog-title" id="dialog-title"></div>
+            <div class="dialog-message" id="dialog-message"></div>
+            <div class="dialog-actions" id="dialog-actions"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/dialogs.js') }}?v={{ app_version }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v={{ app_version }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
