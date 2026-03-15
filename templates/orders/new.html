@@ -361,15 +361,16 @@
             <span class="modal-title" id="itemModalTitle">Add Item</span>
             <button class="menu-close" id="closeItemModal" aria-label="Close">&times;</button>
         </div>
-        <div class="modal-body">
-            <!-- Item search -->
-            <div class="search-bar mb-16">
+        <!-- Item search bar (pinned between header and scrollable body) -->
+        <div class="modal-search-bar" id="modalSearchBar">
+            <div class="search-bar">
                 <svg class="search-bar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" class="form-input" id="itemSearch" placeholder="Search by item #, name, or barcode..." autocomplete="off">
             </div>
-
+        </div>
+        <div class="modal-body">
             <!-- Item search results -->
             <div id="itemSearchResults" class="mb-16">
                 <div class="list-item item-result" data-item-no="WHL-1001" data-desc="Steel Wheel 16x6.5" data-price="89.50" data-uom="EA">

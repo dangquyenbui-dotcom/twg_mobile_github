@@ -1260,10 +1260,17 @@ button {
     font-weight: 700;
 }
 
+.modal-search-bar {
+    padding: 12px 20px 0;
+    flex-shrink: 0;
+    background: var(--color-surface);
+}
+
 .modal-body {
     padding: 16px 20px 24px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
     flex: 1;
     min-height: 0;
 }

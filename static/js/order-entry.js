@@ -262,7 +262,7 @@
     var itemDetailForm = document.getElementById("itemDetailForm");
     var itemSearchResults = document.getElementById("itemSearchResults");
     var itemSearchInput = document.getElementById("itemSearch");
-    var itemSearchBar = itemSearchInput ? itemSearchInput.closest(".search-bar") : null;
+    var itemSearchBar = document.getElementById("modalSearchBar");
     var confirmAddBtn = document.getElementById("confirmAddItem");
     var emptyState = document.getElementById("itemsEmptyState");
     var lineItemsList = document.getElementById("lineItemsList");
@@ -323,6 +323,14 @@
         document.body.style.overflow = "";
         editingIndex = -1;
         pendingItem = null;
+        // Reset keyboard-adjusted modal styles
+        var sheet = document.querySelector(".modal-sheet");
+        if (sheet) {
+            sheet.style.maxHeight = "";
+            sheet.style.bottom = "";
+        }
+        // Blur any focused input to dismiss keyboard
+        if (document.activeElement) document.activeElement.blur();
     }
 
     if (addItemFab) addItemFab.addEventListener("click", function () { openItemModal(); });
@@ -569,5 +577,40 @@
         var div = document.createElement("div");
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    // ── iOS Virtual Keyboard: resize modal to fit visible area ──
+    var modalSheet = document.querySelector(".modal-sheet");
+    if (window.visualViewport && modalSheet) {
+        var onViewportResize = function () {
+            if (!addItemModal.classList.contains("open")) return;
+            var vv = window.visualViewport;
+            // On iOS, when keyboard opens, visualViewport.height shrinks
+            // but the fixed-position modal still uses the full window height.
+            // We cap modal max-height to the visible viewport.
+            var keyboardOffset = window.innerHeight - vv.height;
+            if (keyboardOffset > 50) {
+                // Keyboard is open
+                modalSheet.style.maxHeight = vv.height + "px";
+                modalSheet.style.bottom = keyboardOffset + "px";
+            } else {
+                // Keyboard closed
+                modalSheet.style.maxHeight = "";
+                modalSheet.style.bottom = "";
+            }
+        };
+        window.visualViewport.addEventListener("resize", onViewportResize);
+        window.visualViewport.addEventListener("scroll", onViewportResize);
+    }
+
+    // Scroll focused input into view inside modal (fallback for older iOS)
+    if (addItemModal) {
+        addItemModal.addEventListener("focusin", function (e) {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+                setTimeout(function () {
+                    e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 300);
+            }
+        });
     }
 })();
