@@ -116,9 +116,11 @@
                 e.preventDefault();
                 return;
             }
+            var href = link.getAttribute("href");
+            // Skip confirmation for non-navigating links (# hrefs, menu, etc.)
+            if (!href || href === "#") return;
             if (hasUnsavedData()) {
                 e.preventDefault();
-                var href = link.getAttribute("href");
                 TWG.confirm("Discard Order?", "You have unsaved changes. Are you sure you want to leave?").then(function (ok) {
                     if (ok) {
                         orderDirty = false;
@@ -525,7 +527,7 @@
         document.getElementById("revPO").textContent = getVal("poNumber") || "—";
 
         var shipVia = document.getElementById("shipVia");
-        document.getElementById("revShipVia").textContent = shipVia ? (shipVia.options[shipVia.selectedIndex].text || "—") : "—";
+        document.getElementById("revShipVia").textContent = (shipVia && shipVia.value) ? shipVia.options[shipVia.selectedIndex].text : "—";
         document.getElementById("revDate").textContent = getVal("orderDate") || "—";
 
         var termsEl = document.getElementById("termsId");
