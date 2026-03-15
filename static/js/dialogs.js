@@ -30,8 +30,9 @@ var TWG = TWG || {};
             el.className = "dialog-btn " + (btn.className || "");
             el.textContent = btn.label;
             el.addEventListener("click", function () {
+                var fn = _resolve;
                 hide();
-                if (_resolve) _resolve(btn.value);
+                if (fn) fn(btn.value);
             });
             actionsEl.appendChild(el);
         });
@@ -88,8 +89,9 @@ var TWG = TWG || {};
     if (overlay) {
         overlay.addEventListener("click", function (e) {
             if (e.target === overlay) {
+                var fn = _resolve;
                 hide();
-                if (_resolve) _resolve(false);
+                if (fn) fn(false);
             }
         });
     }

@@ -122,6 +122,8 @@
                 TWG.confirm("Discard Order?", "You have unsaved changes. Are you sure you want to leave?").then(function (ok) {
                     if (ok) {
                         orderDirty = false;
+                        selectedCustomer = null;
+                        lineItems = [];
                         window.location.href = href;
                     }
                 });
