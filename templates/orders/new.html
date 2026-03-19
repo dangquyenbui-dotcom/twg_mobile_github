@@ -43,58 +43,13 @@
             <div id="searchResultsList"></div>
         </div>
 
-        <!-- Recent Customers -->
-        <h2 class="section-title">Recent Customers</h2>
+        <!-- Search prompt -->
         <div class="card" id="recentCustomers">
-            <div class="list-item customer-item" data-customer-id="CUST-1042">
-                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">A</div>
-                <div class="list-item-body">
-                    <div class="list-item-title">Acme Wheel Supply</div>
-                    <div class="list-item-subtitle">CUST-1042 &bull; Dallas, TX</div>
-                </div>
-                <div class="list-item-trailing">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                </div>
-            </div>
-            <div class="list-item customer-item" data-customer-id="CUST-2187">
-                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">P</div>
-                <div class="list-item-body">
-                    <div class="list-item-title">Pacific Rim Tires</div>
-                    <div class="list-item-subtitle">CUST-2187 &bull; Los Angeles, CA</div>
-                </div>
-                <div class="list-item-trailing">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                </div>
-            </div>
-            <div class="list-item customer-item" data-customer-id="CUST-0839">
-                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">M</div>
-                <div class="list-item-body">
-                    <div class="list-item-title">Midwest Auto Parts</div>
-                    <div class="list-item-subtitle">CUST-0839 &bull; Chicago, IL</div>
-                </div>
-                <div class="list-item-trailing">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                </div>
-            </div>
-            <div class="list-item customer-item" data-customer-id="CUST-1550">
-                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">S</div>
-                <div class="list-item-body">
-                    <div class="list-item-title">Southeast Distributors</div>
-                    <div class="list-item-subtitle">CUST-1550 &bull; Atlanta, GA</div>
-                </div>
-                <div class="list-item-trailing">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                </div>
-            </div>
-            <div class="list-item customer-item" data-customer-id="CUST-3201">
-                <div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">N</div>
-                <div class="list-item-body">
-                    <div class="list-item-title">Northeast Wheel Co.</div>
-                    <div class="list-item-subtitle">CUST-3201 &bull; Boston, MA</div>
-                </div>
-                <div class="list-item-trailing">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
-                </div>
+            <div class="card-body" style="text-align:center;padding:32px 20px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="1.5" style="margin-bottom:12px;">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <div style="color:var(--color-text-secondary);font-size:14px;">Type at least 2 characters to search customers</div>
             </div>
         </div>
 
@@ -161,9 +116,17 @@
         <div class="card">
             <div class="card-header">Order Info</div>
             <div class="card-body">
-                <div class="form-group">
-                    <label class="form-label" for="poNumber">PO Number</label>
-                    <input type="text" class="form-input" id="poNumber" placeholder="Customer PO #">
+                <div class="form-row">
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="poNumber">PO Number</label>
+                        <input type="text" class="form-input" id="poNumber" placeholder="Customer PO #">
+                    </div>
+                    <div class="form-group form-col-1">
+                        <label class="form-label" for="warehouse">Warehouse</label>
+                        <select class="form-input" id="warehouse">
+                            <option value="LA">Loading...</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group form-col-1">
@@ -319,6 +282,7 @@
                 <div class="review-line"><span class="review-label">Ship Via</span><span class="review-value" id="revShipVia">—</span></div>
                 <div class="review-line"><span class="review-label">Date</span><span class="review-value" id="revDate">—</span></div>
                 <div class="review-line"><span class="review-label">Terms</span><span class="review-value" id="revTerms">—</span></div>
+                <div class="review-line"><span class="review-label">Warehouse</span><span class="review-value" id="revWarehouse">—</span></div>
             </div>
         </div>
 
@@ -371,43 +335,10 @@
             </div>
         </div>
         <div class="modal-body">
-            <!-- Item search results -->
+            <!-- Item search results (populated by API) -->
             <div id="itemSearchResults" class="mb-16">
-                <div class="list-item item-result" data-item-no="WHL-1001" data-desc="Steel Wheel 16x6.5" data-price="89.50" data-uom="EA">
-                    <div class="list-item-body">
-                        <div class="list-item-title">Steel Wheel 16x6.5</div>
-                        <div class="list-item-subtitle">WHL-1001 &bull; $89.50/EA</div>
-                    </div>
-                </div>
-                <div class="list-item item-result" data-item-no="WHL-2003" data-desc="Aluminum Wheel 17x7" data-price="145.00" data-uom="EA">
-                    <div class="list-item-body">
-                        <div class="list-item-title">Aluminum Wheel 17x7</div>
-                        <div class="list-item-subtitle">WHL-2003 &bull; $145.00/EA</div>
-                    </div>
-                </div>
-                <div class="list-item item-result" data-item-no="WHL-3050" data-desc="Chrome Wheel 20x8.5" data-price="224.75" data-uom="EA">
-                    <div class="list-item-body">
-                        <div class="list-item-title">Chrome Wheel 20x8.5</div>
-                        <div class="list-item-subtitle">WHL-3050 &bull; $224.75/EA</div>
-                    </div>
-                </div>
-                <div class="list-item item-result" data-item-no="TIR-4410" data-desc="All-Season Tire 225/60R16" data-price="112.00" data-uom="EA">
-                    <div class="list-item-body">
-                        <div class="list-item-title">All-Season Tire 225/60R16</div>
-                        <div class="list-item-subtitle">TIR-4410 &bull; $112.00/EA</div>
-                    </div>
-                </div>
-                <div class="list-item item-result" data-item-no="ACC-5500" data-desc="Lug Nut Set (20pc)" data-price="18.50" data-uom="SET">
-                    <div class="list-item-body">
-                        <div class="list-item-title">Lug Nut Set (20pc)</div>
-                        <div class="list-item-subtitle">ACC-5500 &bull; $18.50/SET</div>
-                    </div>
-                </div>
-                <div class="list-item item-result" data-item-no="ACC-6010" data-desc="Center Cap - Chrome" data-price="12.75" data-uom="EA">
-                    <div class="list-item-body">
-                        <div class="list-item-title">Center Cap - Chrome</div>
-                        <div class="list-item-subtitle">ACC-6010 &bull; $12.75/EA</div>
-                    </div>
+                <div style="text-align:center;padding:24px 16px;color:var(--color-text-secondary);font-size:14px;">
+                    Type to search items by code or description
                 </div>
             </div>
 

@@ -12,12 +12,13 @@ def _build_connection_string(server, database):
     """Build a SQL Server connection string from config values."""
     username = current_app.config["DB_USERNAME"]
     password = current_app.config["DB_PASSWORD"]
+    # Wrap password in braces to handle special chars (semicolons, brackets)
     return (
-        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
         f"SERVER={server};"
         f"DATABASE={database};"
         f"UID={username};"
-        f"PWD={password};"
+        f"PWD={{{password}}};"
         f"TrustServerCertificate=yes;"
     )
 
@@ -53,6 +54,50 @@ def get_db_connection(region=None):
     return pyodbc.connect(_build_connection_string(server, database))
 
 
+def get_sys_connection():
+    """Return a connection to the system database (PROSYS)."""
+    user = session.get("user", {})
+    region = user.get("region", "US").upper()
+
+    if region == "US":
+        server = current_app.config["DB_US_SERVER"]
+    elif region == "CA":
+        server = current_app.config["DB_CA_SERVER"]
+    else:
+        server = current_app.config["DB_US_SERVER"]
+
+    database = current_app.config["DB_SYS_NAME"]
+    return pyodbc.connect(_build_connection_string(server, database))
+
+
+def get_raw_connection(region=None):
+    """
+    Return a connection with autocommit=False for manual transaction management.
+    The caller is responsible for calling conn.commit() or conn.rollback().
+    """
+    conn = get_db_connection(region)
+    conn.autocommit = False
+    return conn
+
+
+def get_company_id(region=None):
+    """Derive the AccPac company ID from the database name (PRO05 -> '05')."""
+    if region is None:
+        user = session.get("user", {})
+        region = user.get("region", "US")
+
+    region = region.upper()
+    if region == "US":
+        db_name = current_app.config["DB_US_NAME"]
+    elif region == "CA":
+        db_name = current_app.config["DB_CA_NAME"]
+    else:
+        raise ValueError(f"Unknown region: {region}")
+
+    # Extract digits from end of db name: PRO05 -> 05, PRO06 -> 06
+    return db_name.replace("PRO", "").strip()
+
+
 def execute_query(sql, params=None, region=None):
     """
     Execute a read query and return all rows as a list of dicts.
@@ -69,6 +114,8 @@ def execute_query(sql, params=None, region=None):
     try:
         cursor = conn.cursor()
         cursor.execute(sql, params or ())
+        if cursor.description is None:
+            return []
         columns = [col[0] for col in cursor.description]
         return [dict(zip(columns, row)) for row in cursor.fetchall()]
     finally:

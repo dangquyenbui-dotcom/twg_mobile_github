@@ -18,7 +18,7 @@ class Config:
     DEBUG = FLASK_ENV == "development"
 
     # App version — appended to static asset URLs for Cloudflare cache busting
-    APP_VERSION = os.environ.get("APP_VERSION", "1.2.2")
+    APP_VERSION = os.environ.get("APP_VERSION", "1.3.0")
 
     # Session — server-side filesystem sessions
     SESSION_TYPE = "filesystem"
@@ -47,6 +47,12 @@ class Config:
     DB_CA_NAME = os.environ.get("DB_CA_NAME", "")
     DB_USERNAME = os.environ.get("DB_USERNAME", "")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
+
+    # System database (AccPac/PRO counters, company master)
+    DB_SYS_NAME = os.environ.get("DB_SYS_NAME", "PROSYS")
+
+    # Order creation dry-run mode (ROLLBACK instead of COMMIT)
+    ORDER_DRYRUN = os.environ.get("ORDER_DRYRUN", "").lower() in ("1", "true", "yes")
 
     # ---------------------------------------------------------------------------
     # Role ↔ Entra ID Security Group mapping

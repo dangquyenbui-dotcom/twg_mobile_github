@@ -1,25 +1,18 @@
 /**
  * TWG Mobile — Order Entry Wizard
  * Multi-step wizard: Customer → Details → Items → Review
+ * Connects to Flask API for live customer/item search from AccPac/PRO ERP.
  */
 (function () {
     "use strict";
 
     // ── State ──
     var currentStep = 1;
-    var selectedCustomer = null;
+    var selectedCustomer = null; // full customer object from API
     var lineItems = [];
-    var editingIndex = -1; // -1 = adding new, >= 0 = editing existing
-    var orderDirty = false; // tracks if user has entered any data
-
-    // ── Mock data ──
-    var customers = {
-        "CUST-1042": { name: "Acme Wheel Supply", id: "CUST-1042", address: "1234 Commerce St", city: "Dallas", state: "TX", zip: "75201", terms: "NET30", salesperson: "JD", territory: "SOUTH" },
-        "CUST-2187": { name: "Pacific Rim Tires", id: "CUST-2187", address: "5678 Harbor Blvd", city: "Los Angeles", state: "CA", zip: "90012", terms: "NET30", salesperson: "MK", territory: "WEST" },
-        "CUST-0839": { name: "Midwest Auto Parts", id: "CUST-0839", address: "910 Lake Shore Dr", city: "Chicago", state: "IL", zip: "60601", terms: "NET60", salesperson: "RB", territory: "CENTRAL" },
-        "CUST-1550": { name: "Southeast Distributors", id: "CUST-1550", address: "2200 Peachtree Rd", city: "Atlanta", state: "GA", zip: "30309", terms: "NET30", salesperson: "JD", territory: "SOUTH" },
-        "CUST-3201": { name: "Northeast Wheel Co.", id: "CUST-3201", address: "88 Congress St", city: "Boston", state: "MA", zip: "02110", terms: "NET30", salesperson: "TL", territory: "EAST" }
-    };
+    var editingIndex = -1;
+    var orderDirty = false;
+    var searchTimer = null; // debounce timer for search inputs
 
     // ── Elements ──
     var stepBtns = document.querySelectorAll(".wizard-step");
@@ -48,14 +41,12 @@
             p.classList.toggle("active", parseInt(p.getAttribute("data-panel")) === step);
         });
 
-        // Scroll the active panel's scrollable area to top
         var activePanel = document.querySelector('.wizard-panel.active .page-padding');
         if (activePanel) activePanel.scrollTop = 0;
 
         if (step === 4) populateReview();
     }
 
-    // Step indicator clicks (only completed steps)
     stepBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
             var s = parseInt(btn.getAttribute("data-step"));
@@ -63,14 +54,12 @@
         });
     });
 
-    // Next buttons
     document.querySelectorAll(".wizard-next-btn[data-goto]").forEach(function (btn) {
         btn.addEventListener("click", function () {
             goToStep(parseInt(btn.getAttribute("data-goto")));
         });
     });
 
-    // Back buttons — these go back within the wizard, no confirmation needed
     document.querySelectorAll(".wizard-back-btn[data-goto]").forEach(function (btn) {
         btn.addEventListener("click", function () {
             goToStep(parseInt(btn.getAttribute("data-goto")));
@@ -78,14 +67,10 @@
     });
 
     // ── Leave-page protection ──
-
-    // Browser back button / navigation
-    // Push a state so we can intercept the back button
     if (window.history && window.history.pushState) {
         window.history.pushState({ wizardActive: true }, "");
-        window.addEventListener("popstate", function (e) {
+        window.addEventListener("popstate", function () {
             if (hasUnsavedData()) {
-                // Push state again to prevent leaving
                 window.history.pushState({ wizardActive: true }, "");
                 TWG.confirm("Discard Order?", "You have unsaved changes. Are you sure you want to leave?").then(function (ok) {
                     if (ok) {
@@ -99,7 +84,6 @@
         });
     }
 
-    // Page refresh / close tab
     window.addEventListener("beforeunload", function (e) {
         if (hasUnsavedData()) {
             e.preventDefault();
@@ -107,17 +91,11 @@
         }
     });
 
-    // Bottom nav links — intercept clicks when order has data
     var navLinks = document.querySelectorAll(".bottom-nav .nav-item");
     navLinks.forEach(function (link) {
         link.addEventListener("click", function (e) {
-            // Allow clicking the already-active Orders tab (does nothing)
-            if (link.classList.contains("active")) {
-                e.preventDefault();
-                return;
-            }
+            if (link.classList.contains("active")) { e.preventDefault(); return; }
             var href = link.getAttribute("href");
-            // Skip confirmation for non-navigating links (# hrefs, menu, etc.)
             if (!href || href === "#") return;
             if (hasUnsavedData()) {
                 e.preventDefault();
@@ -133,39 +111,41 @@
         });
     });
 
-    // ── Step 1: Customer Selection ──
-    var customerItems = document.querySelectorAll(".customer-item");
+    // ══════════════════════════════════════════════════════════════════════
+    // Step 1: Customer Selection — Live API Search
+    // ══════════════════════════════════════════════════════════════════════
+
     var selectedCard = document.getElementById("selectedCustomerCard");
     var recentCard = document.getElementById("recentCustomers");
     var searchInput = document.getElementById("customerSearch");
+    var searchResults = document.getElementById("searchResults");
+    var searchList = document.getElementById("searchResultsList");
     var step1Next = document.getElementById("step1Next");
 
-    function selectCustomer(custId) {
-        var cust = customers[custId];
-        if (!cust) return;
-        selectedCustomer = cust;
-        markDirty();
+    function selectCustomer(custno) {
+        // Fetch full customer detail from API
+        fetch("/orders/api/customers/" + encodeURIComponent(custno))
+            .then(function (r) { return r.json(); })
+            .then(function (cust) {
+                if (cust.error) return;
+                selectedCustomer = cust;
+                markDirty();
 
-        document.getElementById("selectedAvatar").textContent = cust.name[0];
-        document.getElementById("selectedName").textContent = cust.name;
-        document.getElementById("selectedId").textContent = cust.id;
-        document.getElementById("selectedAddress").textContent = cust.address + ", " + cust.city + ", " + cust.state + " " + cust.zip;
+                document.getElementById("selectedAvatar").textContent = (cust.company || "?")[0];
+                document.getElementById("selectedName").textContent = cust.company || "";
+                document.getElementById("selectedId").textContent = cust.custno;
+                document.getElementById("selectedAddress").textContent =
+                    (cust.address1 || "") + ", " + (cust.city || "") + ", " + (cust.state || "") + " " + (cust.zip || "");
 
-        selectedCard.style.display = "";
-        recentCard.style.display = "none";
-        var searchResults = document.getElementById("searchResults");
-        if (searchResults) searchResults.style.display = "none";
-        if (searchInput) searchInput.value = "";
-        step1Next.disabled = false;
+                selectedCard.style.display = "";
+                recentCard.style.display = "none";
+                if (searchResults) searchResults.style.display = "none";
+                if (searchInput) searchInput.value = "";
+                step1Next.disabled = false;
 
-        prefillShipping(cust);
+                prefillShipping(cust);
+            });
     }
-
-    customerItems.forEach(function (item) {
-        item.addEventListener("click", function () {
-            selectCustomer(item.getAttribute("data-customer-id"));
-        });
-    });
 
     var changeBtn = document.getElementById("changeCustomerBtn");
     if (changeBtn) {
@@ -181,60 +161,79 @@
         if (selectedCustomer) goToStep(2);
     });
 
-    // Customer search
+    // Customer search — debounced API call
     if (searchInput) {
         searchInput.addEventListener("input", function () {
-            var q = searchInput.value.trim().toLowerCase();
-            var searchResults = document.getElementById("searchResults");
-            var searchList = document.getElementById("searchResultsList");
-            if (!q) {
+            var q = searchInput.value.trim();
+            if (searchTimer) clearTimeout(searchTimer);
+
+            if (q.length < 2) {
                 searchResults.style.display = "none";
                 recentCard.style.display = selectedCustomer ? "none" : "";
                 return;
             }
-            var matches = [];
-            for (var key in customers) {
-                var c = customers[key];
-                if (c.name.toLowerCase().indexOf(q) >= 0 || c.id.toLowerCase().indexOf(q) >= 0) {
-                    matches.push(c);
-                }
-            }
-            if (matches.length) {
-                searchList.innerHTML = matches.map(function (c) {
-                    return '<div class="list-item customer-item" data-customer-id="' + c.id + '">' +
-                        '<div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">' + c.name[0] + '</div>' +
-                        '<div class="list-item-body"><div class="list-item-title">' + c.name + '</div>' +
-                        '<div class="list-item-subtitle">' + c.id + ' &bull; ' + c.city + ', ' + c.state + '</div></div>' +
-                        '<div class="list-item-trailing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></div></div>';
-                }).join("");
-                searchList.querySelectorAll(".customer-item").forEach(function (el) {
-                    el.addEventListener("click", function () {
-                        selectCustomer(el.getAttribute("data-customer-id"));
+
+            searchTimer = setTimeout(function () {
+                fetch("/orders/api/customers/search?q=" + encodeURIComponent(q))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!data.length) {
+                            searchList.innerHTML = '<div class="list-item"><div class="list-item-body"><div class="list-item-subtitle">No matches found</div></div></div>';
+                        } else {
+                            searchList.innerHTML = data.map(function (c) {
+                                return '<div class="list-item customer-item" data-customer-id="' + escapeAttr(c.custno) + '">' +
+                                    '<div class="profile-avatar" style="width:40px;height:40px;font-size:16px;">' + escapeHtml((c.company || "?")[0]) + '</div>' +
+                                    '<div class="list-item-body"><div class="list-item-title">' + escapeHtml(c.company) + '</div>' +
+                                    '<div class="list-item-subtitle">' + escapeHtml(c.custno) + ' &bull; ' + escapeHtml(c.city || "") + ', ' + escapeHtml(c.state || "") + '</div></div>' +
+                                    '<div class="list-item-trailing"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></div></div>';
+                            }).join("");
+                            searchList.querySelectorAll(".customer-item").forEach(function (el) {
+                                el.addEventListener("click", function () {
+                                    selectCustomer(el.getAttribute("data-customer-id"));
+                                });
+                            });
+                        }
+                        searchResults.style.display = "";
+                        recentCard.style.display = "none";
                     });
-                });
-                searchResults.style.display = "";
-                recentCard.style.display = "none";
-            } else {
-                searchList.innerHTML = '<div class="list-item"><div class="list-item-body"><div class="list-item-subtitle">No matches found</div></div></div>';
-                searchResults.style.display = "";
-                recentCard.style.display = "none";
-            }
+            }, 300);
         });
     }
 
-    // ── Step 2: Pre-fill shipping ──
+    // ══════════════════════════════════════════════════════════════════════
+    // Step 2: Pre-fill shipping from customer + load warehouses
+    // ══════════════════════════════════════════════════════════════════════
+
     function prefillShipping(cust) {
-        setVal("shipCompany", cust.name);
-        setVal("shipAddress", cust.address);
-        setVal("shipCity", cust.city);
-        setVal("shipState", cust.state);
-        setVal("shipZip", cust.zip);
-        setVal("salesperson", cust.salesperson || "");
-        setVal("territory", cust.territory || "");
+        setVal("shipCompany", cust.company || "");
+        setVal("shipAddress", cust.address1 || "");
+        setVal("shipCity", cust.city || "");
+        setVal("shipState", cust.state || "");
+        setVal("shipZip", cust.zip || "");
+        setVal("salesperson", cust.salesmn || "");
+        setVal("territory", cust.terr || "");
+        // Set terms from customer record
         var termsEl = document.getElementById("termsId");
-        if (termsEl && cust.terms) termsEl.value = cust.terms;
+        if (termsEl && cust.pterms) {
+            // Try to match the pterms value; if not found, add as option
+            var found = false;
+            for (var i = 0; i < termsEl.options.length; i++) {
+                if (termsEl.options[i].value === cust.pterms || termsEl.options[i].text === cust.pterms) {
+                    termsEl.selectedIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                var opt = document.createElement("option");
+                opt.value = cust.pterms;
+                opt.text = cust.pterms;
+                opt.selected = true;
+                termsEl.appendChild(opt);
+            }
+        }
         var dateEl = document.getElementById("orderDate");
-        if (dateEl) dateEl.value = new Date().toISOString().split("T")[0];
+        if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split("T")[0];
     }
 
     function setVal(id, val) {
@@ -259,7 +258,33 @@
         });
     }
 
-    // ── Step 3: Line Items ──
+    // Load warehouses from API
+    var warehouseSelect = document.getElementById("warehouse");
+    if (warehouseSelect) {
+        fetch("/orders/api/warehouses")
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                warehouseSelect.innerHTML = "";
+                data.forEach(function (w) {
+                    var opt = document.createElement("option");
+                    opt.value = w.loctid;
+                    opt.text = w.loctid + (w.locdesc ? " - " + w.locdesc : "");
+                    warehouseSelect.appendChild(opt);
+                });
+                // Restore last used warehouse from localStorage
+                var last = localStorage.getItem("twg_last_warehouse");
+                if (last) warehouseSelect.value = last;
+                if (!warehouseSelect.value) warehouseSelect.value = "LA";
+            });
+        warehouseSelect.addEventListener("change", function () {
+            localStorage.setItem("twg_last_warehouse", warehouseSelect.value);
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Step 3: Line Items — Live API Item Search
+    // ══════════════════════════════════════════════════════════════════════
+
     var addItemFab = document.getElementById("addItemFab");
     var addItemModal = document.getElementById("addItemModal");
     var closeItemModalBtn = document.getElementById("closeItemModal");
@@ -274,20 +299,23 @@
     var step3Next = document.getElementById("step3Next");
 
     var pendingItem = null;
+    var itemSearchTimer = null;
+
+    function getSelectedWarehouse() {
+        var el = document.getElementById("warehouse");
+        return el ? el.value : "LA";
+    }
 
     function resetItemModal() {
         pendingItem = null;
         editingIndex = -1;
-        // Show search, hide detail form
         if (itemSearchBar) itemSearchBar.style.display = "";
-        if (itemSearchResults) itemSearchResults.style.display = "";
+        if (itemSearchResults) {
+            itemSearchResults.style.display = "";
+            itemSearchResults.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--color-text-secondary);font-size:14px;">Type to search items by code or description</div>';
+        }
         if (itemDetailForm) itemDetailForm.style.display = "none";
         if (itemSearchInput) itemSearchInput.value = "";
-        // Reset all item results to visible
-        if (itemSearchResults) {
-            var allItems = itemSearchResults.querySelectorAll(".item-result");
-            allItems.forEach(function (el) { el.style.display = ""; });
-        }
     }
 
     function openItemModal(editIdx) {
@@ -296,13 +324,11 @@
         document.body.style.overflow = "hidden";
 
         if (editingIndex >= 0) {
-            // Edit mode
             var item = lineItems[editingIndex];
             document.getElementById("itemModalTitle").textContent = "Edit Item";
             confirmAddBtn.textContent = "Update Item";
             pendingItem = { itemNo: item.itemNo, desc: item.desc, price: item.price, uom: item.uom };
 
-            // Hide search, show form directly
             if (itemSearchBar) itemSearchBar.style.display = "none";
             if (itemSearchResults) itemSearchResults.style.display = "none";
             itemDetailForm.style.display = "";
@@ -315,7 +341,6 @@
             setVal("itemDiscount", item.discount || "0");
             calcLineTotal();
         } else {
-            // Add mode
             document.getElementById("itemModalTitle").textContent = "Add Item";
             confirmAddBtn.textContent = "Add to Order";
             resetItemModal();
@@ -327,27 +352,21 @@
         document.body.style.overflow = "";
         editingIndex = -1;
         pendingItem = null;
-        // Reset keyboard-adjusted modal styles
         var sheet = document.querySelector(".modal-sheet");
-        if (sheet) {
-            sheet.style.maxHeight = "";
-            sheet.style.bottom = "";
-        }
-        // Blur any focused input to dismiss keyboard
+        if (sheet) { sheet.style.maxHeight = ""; sheet.style.bottom = ""; }
         if (document.activeElement) document.activeElement.blur();
     }
 
     if (addItemFab) addItemFab.addEventListener("click", function () { openItemModal(); });
     if (closeItemModalBtn) closeItemModalBtn.addEventListener("click", closeModal);
 
-    // Close modal on overlay tap (outside the sheet)
     if (addItemModal) {
         addItemModal.addEventListener("click", function (e) {
             if (e.target === addItemModal) closeModal();
         });
     }
 
-    // Item search results — use event delegation
+    // Item search results — event delegation for dynamically rendered results
     if (itemSearchResults) {
         itemSearchResults.addEventListener("click", function (e) {
             var el = e.target.closest(".item-result");
@@ -358,7 +377,6 @@
             var uom = el.getAttribute("data-uom");
             pendingItem = { itemNo: no, desc: desc, price: price, uom: uom };
 
-            // Show item detail form, hide search
             document.getElementById("selItemName").textContent = desc;
             document.getElementById("selItemNo").textContent = no;
             setVal("itemQty", "1");
@@ -372,7 +390,6 @@
         });
     }
 
-    // Change item button — go back to search from detail form
     var changeItemBtn = document.getElementById("changeItemBtn");
     if (changeItemBtn) {
         changeItemBtn.addEventListener("click", function () {
@@ -380,31 +397,48 @@
             itemDetailForm.style.display = "none";
             if (itemSearchBar) itemSearchBar.style.display = "";
             if (itemSearchResults) itemSearchResults.style.display = "";
-            if (itemSearchInput) {
-                itemSearchInput.value = "";
-                // Reset all items visible
-                var allItems = itemSearchResults.querySelectorAll(".item-result");
-                allItems.forEach(function (el) { el.style.display = ""; });
-            }
+            if (itemSearchInput) itemSearchInput.value = "";
         });
     }
 
-    // Item search filtering
+    // Item search — debounced API call
     if (itemSearchInput) {
         itemSearchInput.addEventListener("input", function () {
-            var q = itemSearchInput.value.trim().toLowerCase();
-            // If the detail form is visible and user starts typing, go back to search
+            var q = itemSearchInput.value.trim();
+            if (itemSearchTimer) clearTimeout(itemSearchTimer);
+
+            // If detail form is visible and user starts typing, go back to search
             if (itemDetailForm.style.display !== "none") {
                 itemDetailForm.style.display = "none";
                 itemSearchResults.style.display = "";
                 pendingItem = null;
             }
-            var items = itemSearchResults.querySelectorAll(".item-result");
-            items.forEach(function (el) {
-                var no = (el.getAttribute("data-item-no") || "").toLowerCase();
-                var desc = (el.getAttribute("data-desc") || "").toLowerCase();
-                el.style.display = (!q || no.indexOf(q) >= 0 || desc.indexOf(q) >= 0) ? "" : "none";
-            });
+
+            if (q.length < 2) {
+                itemSearchResults.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--color-text-secondary);font-size:14px;">Type to search items by code or description</div>';
+                return;
+            }
+
+            itemSearchTimer = setTimeout(function () {
+                var loctid = getSelectedWarehouse();
+                fetch("/orders/api/items/search?q=" + encodeURIComponent(q) + "&loctid=" + encodeURIComponent(loctid))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!data.length) {
+                            itemSearchResults.innerHTML = '<div class="list-item"><div class="list-item-body"><div class="list-item-subtitle">No items found</div></div></div>';
+                        } else {
+                            itemSearchResults.innerHTML = data.map(function (item) {
+                                var price = item.webprice || item.cost || 0;
+                                var um = item.umeasur || "EA";
+                                return '<div class="list-item item-result" data-item-no="' + escapeAttr(item.item) + '" data-desc="' + escapeAttr(item.descrip) + '" data-price="' + price + '" data-uom="' + escapeAttr(um) + '">' +
+                                    '<div class="list-item-body">' +
+                                    '<div class="list-item-title">' + escapeHtml(item.descrip) + '</div>' +
+                                    '<div class="list-item-subtitle">' + escapeHtml(item.item) + ' &bull; $' + Number(price).toFixed(2) + '/' + escapeHtml(um) + '</div>' +
+                                    '</div></div>';
+                            }).join("");
+                        }
+                    });
+            }, 300);
         });
     }
 
@@ -493,7 +527,6 @@
         subtotalBar.style.display = "";
         document.getElementById("runningSubtotal").textContent = "$" + subtotal.toFixed(2);
 
-        // Bind edit/delete with event delegation on the list container
         lineItemsList.querySelectorAll(".line-item-edit").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 openItemModal(parseInt(btn.getAttribute("data-index")));
@@ -512,11 +545,14 @@
         });
     }
 
-    // ── Step 4: Review ──
+    // ══════════════════════════════════════════════════════════════════════
+    // Step 4: Review & Place Order
+    // ══════════════════════════════════════════════════════════════════════
+
     function populateReview() {
         if (selectedCustomer) {
-            document.getElementById("revCustomer").textContent = selectedCustomer.name;
-            document.getElementById("revCustId").textContent = selectedCustomer.id;
+            document.getElementById("revCustomer").textContent = selectedCustomer.company || "—";
+            document.getElementById("revCustId").textContent = selectedCustomer.custno || "—";
         }
 
         var company = getVal("shipCompany");
@@ -532,6 +568,9 @@
 
         var termsEl = document.getElementById("termsId");
         document.getElementById("revTerms").textContent = termsEl ? (termsEl.options[termsEl.selectedIndex].text || "—") : "—";
+
+        var whEl = document.getElementById("warehouse");
+        document.getElementById("revWarehouse").textContent = whEl ? whEl.value : "—";
 
         var revItems = document.getElementById("revItemsList");
         var subtotal = 0;
@@ -555,17 +594,80 @@
         document.getElementById("revTotal").textContent = "$" + total.toFixed(2);
     }
 
+    // Build the order payload for the API
+    function buildOrderPayload() {
+        var taxRate = parseFloat(document.getElementById("taxRate").value) || 0;
+        var subtotal = 0;
+        var items = lineItems.map(function (li) {
+            subtotal += li.total;
+            return { item: li.itemNo, qty: li.qty, price: li.price, discount: li.discount || 0 };
+        });
+        var exttax = Math.round(subtotal * (taxRate / 100) * 100) / 100;
+        var discPct = parseFloat(document.getElementById("discountPct").value) || 0;
+        var extdisc = Math.round(subtotal * (discPct / 100) * 100) / 100;
+
+        return {
+            custno: selectedCustomer ? selectedCustomer.custno : "",
+            loctid: getVal("warehouse") || "LA",
+            ordate: getVal("orderDate"),
+            ponum: getVal("poNumber"),
+            shipvia: getVal("shipVia"),
+            notes: getVal("orderComment"),
+            ship_to: {
+                company: getVal("shipCompany"),
+                address1: getVal("shipAddress"),
+                address2: "",
+                city: getVal("shipCity"),
+                state: getVal("shipState"),
+                zip: getVal("shipZip"),
+                country: "US",
+                email: selectedCustomer ? (selectedCustomer.email || "") : "",
+                phone: selectedCustomer ? (selectedCustomer.phone || "") : ""
+            },
+            items: items,
+            shpcost: 0,
+            exttax: exttax,
+            extdisc: extdisc
+        };
+    }
+
     // Place order
     var placeOrderBtn = document.getElementById("placeOrderBtn");
     if (placeOrderBtn) {
         placeOrderBtn.addEventListener("click", function () {
+            // Validate required fields
+            if (!getVal("poNumber")) {
+                TWG.alert("Missing PO Number", "Please enter a PO number in the Order Details step.");
+                return;
+            }
             TWG.confirm("Place Order", "Submit this order for processing?").then(function (ok) {
                 if (ok) {
-                    // Clear dirty state so navigation doesn't prompt again
-                    orderDirty = false;
-                    selectedCustomer = null;
-                    lineItems = [];
-                    TWG.alert("Order Submitted", "Your order has been submitted successfully.");
+                    placeOrderBtn.disabled = true;
+                    placeOrderBtn.textContent = "Submitting...";
+                    var payload = buildOrderPayload();
+                    fetch("/orders/api/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            orderDirty = false;
+                            selectedCustomer = null;
+                            lineItems = [];
+                            TWG.alert("Order Created", "SO# " + data.sono + " has been created successfully.\nTotal: $" + Number(data.ordamt).toFixed(2));
+                        } else {
+                            TWG.alert("Error", data.error || "Failed to create order.");
+                        }
+                    })
+                    .catch(function () {
+                        TWG.alert("Connection Error", "Could not reach server. Please try again.");
+                    })
+                    .then(function () {
+                        placeOrderBtn.disabled = false;
+                        placeOrderBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg> Place Order';
+                    });
                 }
             });
         });
@@ -578,9 +680,15 @@
     }
 
     function escapeHtml(str) {
+        if (!str) return "";
         var div = document.createElement("div");
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    function escapeAttr(str) {
+        if (!str) return "";
+        return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     // ── iOS Virtual Keyboard: resize modal to fit visible area ──
@@ -589,16 +697,11 @@
         var onViewportResize = function () {
             if (!addItemModal.classList.contains("open")) return;
             var vv = window.visualViewport;
-            // On iOS, when keyboard opens, visualViewport.height shrinks
-            // but the fixed-position modal still uses the full window height.
-            // We cap modal max-height to the visible viewport.
             var keyboardOffset = window.innerHeight - vv.height;
             if (keyboardOffset > 50) {
-                // Keyboard is open
                 modalSheet.style.maxHeight = vv.height + "px";
                 modalSheet.style.bottom = keyboardOffset + "px";
             } else {
-                // Keyboard closed
                 modalSheet.style.maxHeight = "";
                 modalSheet.style.bottom = "";
             }
@@ -607,7 +710,6 @@
         window.visualViewport.addEventListener("scroll", onViewportResize);
     }
 
-    // Scroll focused input into view inside modal (fallback for older iOS)
     if (addItemModal) {
         addItemModal.addEventListener("focusin", function (e) {
             if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
